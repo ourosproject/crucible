@@ -17,6 +17,10 @@ pub fn analyze_source(file_name: &str, src: &str) -> Result<Vec<FnMetrics>, syn:
         .into_iter()
         .map(|f| FnMetrics {
             branching: primitives::branching(&f.block),
+            depth: primitives::depth(&f.block),
+            size: primitives::size(&f.block),
+            state: primitives::state(&f.block),
+            density: primitives::density(&f.block),
             path: f.path,
             span: f.span,
             ..Default::default()
