@@ -21,9 +21,9 @@ pub fn analyze_source(file_name: &str, src: &str) -> Result<Vec<FnMetrics>, syn:
             size: primitives::size(&f.block),
             state: primitives::state(&f.block),
             density: primitives::density(&f.block),
+            cognitive: primitives::cognitive(&f.block),
             path: f.path,
             span: f.span,
-            ..Default::default()
         })
         .collect())
 }
