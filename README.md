@@ -21,6 +21,9 @@ repo, here is the number, here is the span."*
   yet* (see below).
 - It does not average. A file of 40 trivial functions and one monster does not come out
   "fine" — the monster is the story, and a mean would hide it.
+- It does not **predict bugs.** It measures how *complex* code is, never how *buggy* — the
+  complexity→defect link is disconfirmed folklore, and a truth instrument won't sell a
+  prediction the evidence doesn't support. A percentile is a structural fact, not a risk score.
 - It makes **zero model calls.** Every number is reproducible and traces to a source
   span.
 
