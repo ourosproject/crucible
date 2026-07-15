@@ -26,13 +26,13 @@ pub fn functions_in_source(file_name: &str, src: &str) -> Result<Vec<Function>, 
 
 fn walk_item(file: &str, item: &syn::Item, prefix: &mut Vec<String>, out: &mut Vec<Function>) {
     match item {
-        syn::Item::Fn(f) => push(file, prefix, &f.sig.ident, (*f.block).clone(), out),
+        syn::Item::Fn(f) => record_fn(file, prefix, &f.sig.ident, &f.block, out),
         syn::Item::Impl(imp) => {
             let ty = type_name(&imp.self_ty);
             prefix.push(ty);
             for it in &imp.items {
                 if let syn::ImplItem::Fn(m) = it {
-                    push(file, prefix, &m.sig.ident, m.block.clone(), out);
+                    record_fn(file, prefix, &m.sig.ident, &m.block, out);
                 }
             }
             prefix.pop();
@@ -42,7 +42,7 @@ fn walk_item(file: &str, item: &syn::Item, prefix: &mut Vec<String>, out: &mut V
             for it in &tr.items {
                 if let syn::TraitItem::Fn(m) = it {
                     if let Some(block) = &m.default {
-                        push(file, prefix, &m.sig.ident, block.clone(), out);
+                        record_fn(file, prefix, &m.sig.ident, block, out);
                     }
                 }
             }
@@ -61,15 +61,28 @@ fn walk_item(file: &str, item: &syn::Item, prefix: &mut Vec<String>, out: &mut V
     }
 }
 
-fn push(file: &str, prefix: &[String], ident: &syn::Ident, block: syn::Block, out: &mut Vec<Function>) {
+/// Record one fn as a unit, then descend into its body for NESTED item definitions
+/// (a `fn`/`impl`/`mod` declared inside the body) — each is its own unit, scoped
+/// under this fn's name (`outer::helper`). The analyzers stop at the same boundary
+/// (their `visit_item` is a no-op), so a nested fn's structure is measured once, on
+/// its own row, and never folded into this fn's numbers.
+fn record_fn(file: &str, prefix: &mut Vec<String>, ident: &syn::Ident, block: &syn::Block, out: &mut Vec<Function>) {
     let mut path = prefix.to_vec();
     path.push(ident.to_string());
     let lc = ident.span().start();
     out.push(Function {
         path: path.join("::"),
         span: Span { file: file.to_string(), line: lc.line, col: lc.column },
-        block,
+        block: block.clone(),
     });
+
+    prefix.push(ident.to_string());
+    for stmt in &block.stmts {
+        if let syn::Stmt::Item(nested) = stmt {
+            walk_item(file, nested, prefix, out);
+        }
+    }
+    prefix.pop();
 }
 
 /// Last path segment of an impl's self type — `impl Foo::Bar` → "Bar". Anything
@@ -115,6 +128,26 @@ mod tests {
         );
         // Spans are 1-based lines, non-zero, and name the file.
         assert!(fns.iter().all(|f| f.span.file == "lib.rs" && f.span.line >= 1));
+    }
+
+    #[test]
+    fn a_nested_fn_is_its_own_unit_scoped_under_its_parent() {
+        let src = r#"
+            fn outer() {
+                fn helper() {}
+                let a = 1;
+            }
+        "#;
+        let paths: Vec<String> = functions_in_source("lib.rs", src)
+            .unwrap()
+            .into_iter()
+            .map(|f| f.path)
+            .collect();
+        assert_eq!(
+            paths,
+            vec!["outer", "outer::helper"],
+            "the nested helper is discovered as its own unit, not absorbed into outer"
+        );
     }
 
     #[test]

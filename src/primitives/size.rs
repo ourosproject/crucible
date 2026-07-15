@@ -17,6 +17,10 @@ struct Counter {
 }
 
 impl<'ast> Visit<'ast> for Counter {
+    /// A nested item (fn/impl/mod) is its own unit — parse.rs measures it on its
+    /// own row, so its statements must not be folded into this fn's count.
+    fn visit_item(&mut self, _n: &'ast syn::Item) {}
+
     fn visit_stmt(&mut self, n: &'ast syn::Stmt) {
         // Count let-bindings, expression-statements, and macro-statements. A nested
         // item def (`Stmt::Item`) is a definition, not a statement of THIS fn.

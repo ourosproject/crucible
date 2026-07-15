@@ -17,6 +17,10 @@ struct Counter {
 }
 
 impl<'ast> Visit<'ast> for Counter {
+    /// A nested item (fn/impl/mod) is its own unit — parse.rs measures it on its
+    /// own row, so its bindings must not be folded into this fn's count.
+    fn visit_item(&mut self, _n: &'ast syn::Item) {}
+
     fn visit_local(&mut self, n: &'ast syn::Local) {
         self.count += 1;
         visit::visit_local(self, n);

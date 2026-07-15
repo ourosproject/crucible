@@ -1,10 +1,19 @@
 //! Cognitive complexity — a DERIVED composite of P1 (branching) weighted by P2
 //! (nesting), never an independent primitive (spec §4). Definition: each nesting
 //! construct (`if`/`else if`/`while`/`for`/`loop`/`match`) adds `1 + current_nesting`
-//! and increases nesting for its body; each `&&`/`||`/`?` adds a flat `1`. This is
-//! SonarSource's shape (a base increment plus a nesting bonus) reduced to crucible's
-//! two primitives. It is the only metric with dedicated human-understandability
-//! validation, so the report SURFACES it as the headline — labeled derived.
+//! and increases nesting for its body; each `&&`/`||`/`?` adds a flat `1`. This
+//! follows the SHAPE of SonarSource cognitive complexity (a base increment plus a
+//! nesting bonus) reduced to crucible's two primitives — it is not a faithful
+//! reimplementation. The metric FAMILY it belongs to has human-understandability
+//! validation, so the report surfaces it as the headline — labeled derived.
+//!
+//! Two v1 simplifications, stated for the same honesty reason `depth.rs` states its
+//! own (this is the headline number, so its caveats must be visible): an `else if`
+//! ladder reads as *increasing* nesting (each `else if` is a nested `ExprIf`, so it
+//! takes a nesting bonus rather than being flattened as SonarSource does), and a run
+//! of like boolean operators charges `+1` per operator rather than `+1` per sequence.
+//! Both inflate relative to canonical cognitive complexity; both are deferred
+//! sharpenings, defined and reproducible.
 
 use syn::visit::{self, Visit};
 
@@ -30,6 +39,10 @@ impl Counter {
 }
 
 impl<'ast> Visit<'ast> for Counter {
+    /// A nested item (fn/impl/mod) is its own unit — parse.rs measures it on its
+    /// own row, so its body must not be folded into this fn's count.
+    fn visit_item(&mut self, _n: &'ast syn::Item) {}
+
     fn visit_expr_if(&mut self, n: &'ast syn::ExprIf) {
         self.nest(|s| visit::visit_expr_if(s, n));
     }

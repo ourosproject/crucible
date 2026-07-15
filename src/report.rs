@@ -63,8 +63,18 @@ fn push_offenders(out: &mut String, metrics: &[FnMetrics], top_n: usize, key: im
         dist.min, dist.median, dist.p90, dist.p99, dist.max, dist.mean
     ));
 
+    // Total order: metric desc, then a full span tiebreak. `path` alone is NOT
+    // unique — an inherent method and a trait-impl method on the same type both
+    // render as `S::m` — so ties fall through to file:line:col, which is.
     let mut ranked: Vec<&FnMetrics> = metrics.iter().collect();
-    ranked.sort_by(|a, b| key(b).cmp(&key(a)).then_with(|| a.path.cmp(&b.path)));
+    ranked.sort_by(|a, b| {
+        key(b)
+            .cmp(&key(a))
+            .then_with(|| a.path.cmp(&b.path))
+            .then_with(|| a.span.file.cmp(&b.span.file))
+            .then_with(|| a.span.line.cmp(&b.span.line))
+            .then_with(|| a.span.col.cmp(&b.span.col))
+    });
     for m in ranked.into_iter().take(top_n) {
         let pct = rollup::percentile_rank(&values, key(m));
         out.push_str(&format!(

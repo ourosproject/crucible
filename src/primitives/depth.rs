@@ -32,6 +32,10 @@ impl Counter {
 }
 
 impl<'ast> Visit<'ast> for Counter {
+    /// A nested item (fn/impl/mod) is its own unit — parse.rs measures it on its
+    /// own row, so its body must not be folded into this fn's count.
+    fn visit_item(&mut self, _n: &'ast syn::Item) {}
+
     fn visit_expr_if(&mut self, n: &'ast syn::ExprIf) {
         self.enter();
         visit::visit_expr_if(self, n);

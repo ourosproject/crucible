@@ -44,4 +44,32 @@ mod pipeline_tests {
         assert_eq!(m[1].path, "branchy");
         assert_eq!(m[1].branching, 2); // one `if`
     }
+
+    #[test]
+    fn a_nested_fn_is_measured_on_its_own_row_not_folded_into_its_parent() {
+        // outer's OWN structure is trivial; all the complexity lives in `helper`.
+        let src = r#"
+            fn outer() {
+                fn helper(x: bool) { if x { for _ in 0..10 { let z = 1; } } }
+                let a = 1;
+                helper(true);
+            }
+        "#;
+        let m = analyze_source("x.rs", src).unwrap();
+        let by = |p: &str| m.iter().find(|f| f.path == p).unwrap();
+
+        let outer = by("outer");
+        assert_eq!(
+            (outer.branching, outer.depth, outer.size, outer.state, outer.cognitive),
+            (1, 0, 2, 1, 0),
+            "outer's numbers must reflect ONLY outer (the `if`/`for`/`let z` belong to helper)"
+        );
+
+        let helper = by("outer::helper");
+        assert_eq!(
+            (helper.branching, helper.depth, helper.state, helper.cognitive),
+            (3, 2, 1, 3),
+            "helper carries its own structure, once"
+        );
+    }
 }

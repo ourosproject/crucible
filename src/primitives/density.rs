@@ -30,6 +30,10 @@ struct Counter {
 }
 
 impl<'ast> Visit<'ast> for Counter {
+    /// A nested item (fn/impl/mod) is its own unit — parse.rs measures it on its
+    /// own row, so its chains must not be folded into this fn's count.
+    fn visit_item(&mut self, _n: &'ast syn::Item) {}
+
     fn visit_expr(&mut self, n: &'ast syn::Expr) {
         let l = chain_len(n);
         if l > self.max {
