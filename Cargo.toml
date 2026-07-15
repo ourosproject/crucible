@@ -1,0 +1,13 @@
+[package]
+name = "crucible"
+version = "0.1.0"
+edition = "2021"
+description = "Put your code in, find out what it's really made of — an honest, deterministic simplicity engine."
+
+[dependencies]
+syn = { version = "2", features = ["full", "visit", "extra-traits"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+walkdir = "2"
+
+[dev-dependencies]
+# tests use only std + syn; fixtures are inline Rust source strings.
