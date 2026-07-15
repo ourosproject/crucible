@@ -5,6 +5,7 @@
 pub mod model;
 pub mod parse;
 pub mod primitives;
+pub mod rollup;
 
 use model::FnMetrics;
 
