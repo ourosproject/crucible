@@ -1,6 +1,7 @@
 # DISCLAIMER
 
 How this was built
+
 I designed crucible and built it with **heavy LLM assistance**, working from the spec and plan in docs/. The design decisions are mine and argued for in those documents, particularly the refusals: no grading, no averaging, no defect prediction. The commit history is the real sequence of work rather than a squashed dump.
 Stating this because the README's whole argument is that a tool should only claim what it can back, and that applies to the tool's own provenance.
 
