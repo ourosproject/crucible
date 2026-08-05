@@ -20,7 +20,14 @@ pub struct Distribution {
 /// measured," not an error).
 pub fn distribution(values: &[u32]) -> Distribution {
     if values.is_empty() {
-        return Distribution { min: 0, median: 0.0, p90: 0.0, p99: 0.0, max: 0, mean: 0.0 };
+        return Distribution {
+            min: 0,
+            median: 0.0,
+            p90: 0.0,
+            p99: 0.0,
+            max: 0,
+            mean: 0.0,
+        };
     }
     let mut v = values.to_vec();
     v.sort_unstable();
@@ -95,7 +102,10 @@ mod tests {
         assert_eq!(d.min, 1);
         assert_eq!(d.median, 1.0);
         assert_eq!(d.max, 100, "the outlier survives — it is the story");
-        assert!(d.mean < 4.0, "and the mean, on its own, would have buried it");
+        assert!(
+            d.mean < 4.0,
+            "and the mean, on its own, would have buried it"
+        );
     }
 
     #[test]
@@ -112,7 +122,11 @@ mod tests {
         let xs = [1.0, 2.0, 3.0, 4.0];
         let ys = [2.0, 4.0, 6.0, 8.0]; // y = 2x
         assert!((pearson(&xs, &ys).unwrap() - 1.0).abs() < 1e-9);
-        assert_eq!(pearson(&[5.0, 5.0, 5.0], &[1.0, 2.0, 3.0]), None, "zero variance ⇒ undefined");
+        assert_eq!(
+            pearson(&[5.0, 5.0, 5.0], &[1.0, 2.0, 3.0]),
+            None,
+            "zero variance ⇒ undefined"
+        );
         assert_eq!(pearson(&[1.0], &[1.0]), None, "n < 2 ⇒ undefined");
     }
 }

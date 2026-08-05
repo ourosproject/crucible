@@ -2,39 +2,116 @@
 
 **Put your code in, find out what it's really made of.**
 
-A deterministic engine that measures the *simplicity* of Rust code — honestly, by
-orthogonal primitives, and ranked against your own codebase rather than against
-invented thresholds it could never defend.
+A deterministic simplicity engine for Rust. It measures how complex your code
+actually is, ranks every function against the rest of your own codebase, and
+refuses to tell you anything it cannot back with a number and a source span.
 
-The one-line thesis: **a truth instrument may only point at a fact it can measure.**
-So crucible measures the axes of "simple" that are actually there in the syntax tree
-— branching, depth, size, state, density — and it never emits a verdict it can't back.
-There is no "quality: 7/10" here, because that number would be a guess wearing a
-decimal point. There is only *"this function is in the top 1% most complex in your
-repo, here is the number, here is the span."*
+No model calls. No network. No score out of ten.
 
-## What it does not do (on purpose)
+```
+$ crucible src
 
-- It does not grade. It **ranks, relative to your codebase** — no universal "complexity
-  10 = bad" threshold, because none exists honestly. What's fine for a parser is sloppy
-  for a config loader, and knowing which is which needs *context crucible does not have
-  yet* (see below).
-- It does not average. A file of 40 trivial functions and one monster does not come out
-  "fine" — the monster is the story, and a mean would hide it.
-- It does not **predict bugs.** It measures how *complex* code is, never how *buggy* — the
-  complexity→defect link is disconfirmed folklore, and a truth instrument won't sell a
-  prediction the evidence doesn't support. A percentile is a structural fact, not a risk score.
-- It makes **zero model calls.** Every number is reproducible and traces to a source
-  span.
+crucible — simplicity report
+crucible measures structure, not defects. A percentile is not a bug risk.
 
-## The road it's on
+85 functions measured.
 
-crucible is the *thick engine* of a larger idea. Today it measures. Later — its own
-dedicated arc, not this one — a small, glass-box model (built on
-[eyeofrah](../eyeofrah)) will read these measurements as a *sense*, classify each unit's
-**role**, and select a yardstick fair to that role — a parser judged as a parser. That
-model is "the fused limb." crucible is built model-agnostic so the limb drops on later
-without rework: the role/yardstick column simply sits empty until it arrives.
+## cognitive complexity (derived: branching x nesting; the human-facing headline)
+  distribution: min 0 · median 0 · p90 1 · p99 12 · max 20 · (mean 0.7)
+     20  p 99  walk_item                    src/parse.rs:27:4
+     11  p 98  main                         src/main.rs:8:4
+      5  p 96  pearson                      src/rollup.rs:62:8
+      3  p 95  record_fn                    src/parse.rs:69:4
+      2  p 92  Counter::visit_expr_closure  src/primitives/depth.rs:64:8
+```
 
-Status: design (see `docs/superpowers/specs/`). v1 is the Simplicity dimension, Rust
-only, CLI report, dogfooded on real code.
+That is crucible run on itself. Its own parser walker is the most complex thing
+in the repo, and the tool says so.
+
+## Why it works this way
+
+Most complexity tools hand you a grade. A 7.4, a letter, a red badge. That
+number is a guess wearing a decimal point, because there is no honest universal
+threshold for "too complex." What is perfectly reasonable in a parser is sloppy
+in a config loader, and nothing in the syntax tree tells you which one you are
+looking at.
+
+So crucible does not grade. It ranks, relative to your codebase. The claim it
+makes is small enough to actually defend: *this function sits in the top 1% most
+complex in your repo, here is the number, here is the line.*
+
+Three rules it holds itself to:
+
+**It never averages.** A file with forty trivial functions and one monster does
+not come out "fine." The monster is the story, and a mean would bury it. You get
+distributions, never a headline mean.
+
+**It never predicts bugs.** Complexity metrics get sold as defect risk
+constantly, and the link is far weaker than the marketing implies. A percentile
+is a structural fact about your code, not a probability that it breaks.
+
+**It never estimates.** Every number is a pure function of the source text. Run
+it twice on the same input and get the same output, forever. Unparseable files
+are skipped and named out loud, because a silent omission reads as "everything
+was measured."
+
+## What it measures
+
+Six numbers per function, each a separate pass over the syntax tree:
+
+| | |
+|---|---|
+| **branching** | cyclomatic complexity: decision points plus one |
+| **depth** | maximum control-flow nesting |
+| **size** | statement count |
+| **state** | mutable bindings in scope |
+| **density** | expression chaining |
+| **cognitive** | derived: branching weighted by the nesting it sits under |
+
+Cognitive is the headline because it tracks what reading the function actually
+feels like. Ten flat `if` statements and ten nested ones score identically on
+cyclomatic complexity and nothing like identically on a Tuesday afternoon.
+
+Nested functions are measured on their own row rather than folded into their
+parent, so a trivial wrapper around a monster helper reads as exactly that.
+
+## Install
+
+```
+git clone https://github.com/YOUR_USERNAME/crucible
+cd crucible
+cargo build --release
+./target/release/crucible path/to/your/rust/project
+```
+
+Point it at a file, a directory, or a whole workspace. It walks for `.rs` files
+and measures everything it finds.
+
+## Speed
+
+Ten seconds for 117,045 functions across 2,620 files, on a laptop. There is no
+inference step to wait on, because there is no model. The entire dependency tree
+is ten crates and the binary is 2.5 MB.
+
+## What it does not do yet
+
+Rust only. `syn` does the parsing, so the language boundary is real rather than
+a matter of bolting on more regexes.
+
+It also has no idea what your code is *for*. It can tell you a function sits in
+your top 1%, but not whether that is perfectly fine for a parser and alarming
+for a config loader. Closing that gap needs role classification, and doing it
+honestly needs a model that can show its work. That is a separate project and a
+separate argument. crucible is built so that column can be filled in later
+without rewriting anything underneath it.
+
+Until then it does the smaller, checkable thing.
+
+## Status
+
+v1. Rust only, CLI output, 26 tests, dogfooded on real codebases including its
+own.
+
+## License
+
+MIT.

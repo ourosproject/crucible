@@ -1,3 +1,5 @@
 /target
-Cargo.lock
 .DS_Store
+
+# Cargo.lock is committed on purpose: crucible ships a binary, so a clone
+# should build against the exact dependency versions that were tested.

@@ -2,7 +2,12 @@
 name = "crucible"
 version = "0.1.0"
 edition = "2021"
-description = "Put your code in, find out what it's really made of — an honest, deterministic simplicity engine."
+description = "Put your code in, find out what it's really made of. An honest, deterministic simplicity engine for Rust."
+license = "MIT"
+readme = "README.md"
+keywords = ["complexity", "metrics", "static-analysis", "cli", "rust"]
+categories = ["development-tools", "command-line-utilities"]
+# repository = "https://github.com/YOUR_USERNAME/crucible"   # set before publishing
 
 [dependencies]
 syn = { version = "2", features = ["full", "visit", "extra-traits"] }

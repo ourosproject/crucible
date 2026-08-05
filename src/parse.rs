@@ -66,13 +66,23 @@ fn walk_item(file: &str, item: &syn::Item, prefix: &mut Vec<String>, out: &mut V
 /// under this fn's name (`outer::helper`). The analyzers stop at the same boundary
 /// (their `visit_item` is a no-op), so a nested fn's structure is measured once, on
 /// its own row, and never folded into this fn's numbers.
-fn record_fn(file: &str, prefix: &mut Vec<String>, ident: &syn::Ident, block: &syn::Block, out: &mut Vec<Function>) {
+fn record_fn(
+    file: &str,
+    prefix: &mut Vec<String>,
+    ident: &syn::Ident,
+    block: &syn::Block,
+    out: &mut Vec<Function>,
+) {
     let mut path = prefix.to_vec();
     path.push(ident.to_string());
     let lc = ident.span().start();
     out.push(Function {
         path: path.join("::"),
-        span: Span { file: file.to_string(), line: lc.line, col: lc.column },
+        span: Span {
+            file: file.to_string(),
+            line: lc.line,
+            col: lc.column,
+        },
         block: block.clone(),
     });
 
@@ -127,7 +137,9 @@ mod tests {
             "every fn with a body, in source order, dotted-pathed; the bodiless trait fn is not a unit"
         );
         // Spans are 1-based lines, non-zero, and name the file.
-        assert!(fns.iter().all(|f| f.span.file == "lib.rs" && f.span.line >= 1));
+        assert!(fns
+            .iter()
+            .all(|f| f.span.file == "lib.rs" && f.span.line >= 1));
     }
 
     #[test]

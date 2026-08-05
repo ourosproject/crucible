@@ -25,7 +25,9 @@ pub fn render(metrics: &[FnMetrics], top_n: usize) -> String {
     out.push_str(&format!("\n{} functions measured.\n", metrics.len()));
 
     // Cognitive is the human-facing headline (derived, labeled).
-    out.push_str("\n## cognitive complexity (derived: branching x nesting; the human-facing headline)\n");
+    out.push_str(
+        "\n## cognitive complexity (derived: branching x nesting; the human-facing headline)\n",
+    );
     push_offenders(&mut out, metrics, top_n, |m| m.cognitive);
 
     out.push_str("\n## P1 branching (cyclomatic)\n");
@@ -54,7 +56,12 @@ pub fn render(metrics: &[FnMetrics], top_n: usize) -> String {
 
 /// One primitive's worst offenders + its distribution line. Deterministic order:
 /// by the metric descending, then by path ascending to break ties.
-fn push_offenders(out: &mut String, metrics: &[FnMetrics], top_n: usize, key: impl Fn(&FnMetrics) -> u32) {
+fn push_offenders(
+    out: &mut String,
+    metrics: &[FnMetrics],
+    top_n: usize,
+    key: impl Fn(&FnMetrics) -> u32,
+) {
     let mut values: Vec<u32> = metrics.iter().map(&key).collect();
     values.sort_unstable();
     let dist = rollup::distribution(&values);
@@ -97,7 +104,11 @@ mod tests {
     fn fnm(path: &str, cognitive: u32, branching: u32, size: u32) -> FnMetrics {
         FnMetrics {
             path: path.into(),
-            span: Span { file: "x.rs".into(), line: 1, col: 0 },
+            span: Span {
+                file: "x.rs".into(),
+                line: 1,
+                col: 0,
+            },
             branching,
             size,
             cognitive,
@@ -108,10 +119,16 @@ mod tests {
     #[test]
     fn surfaces_cognitive_headline_labels_unvalidated_and_disclaims_defects() {
         let r = render(&[fnm("a", 5, 3, 10), fnm("b", 1, 1, 2)], 10);
-        assert!(r.contains("cognitive complexity (derived"), "cognitive is the headline");
+        assert!(
+            r.contains("cognitive complexity (derived"),
+            "cognitive is the headline"
+        );
         assert!(r.contains("headline"));
         assert!(r.contains("[UNVALIDATED / intuition]"), "P4/P5 are tagged");
-        assert!(r.contains(NO_DEFECT_DISCLAIMER), "the no-defect disclaimer ships");
+        assert!(
+            r.contains(NO_DEFECT_DISCLAIMER),
+            "the no-defect disclaimer ships"
+        );
         // §5.5 — never a single fused 'simplicity score'.
         assert!(!r.to_lowercase().contains("simplicity score"));
         // §5.6 — the correlation line is present.
@@ -124,7 +141,10 @@ mod tests {
         let cog_section = r.split("## P1 branching").next().unwrap();
         let big_at = cog_section.find("BIG").unwrap();
         let small_at = cog_section.find("small").unwrap();
-        assert!(big_at < small_at, "the worst cognitive offender is listed first");
+        assert!(
+            big_at < small_at,
+            "the worst cognitive offender is listed first"
+        );
     }
 
     #[test]

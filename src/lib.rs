@@ -60,14 +60,25 @@ mod pipeline_tests {
 
         let outer = by("outer");
         assert_eq!(
-            (outer.branching, outer.depth, outer.size, outer.state, outer.cognitive),
+            (
+                outer.branching,
+                outer.depth,
+                outer.size,
+                outer.state,
+                outer.cognitive
+            ),
             (1, 0, 2, 1, 0),
             "outer's numbers must reflect ONLY outer (the `if`/`for`/`let z` belong to helper)"
         );
 
         let helper = by("outer::helper");
         assert_eq!(
-            (helper.branching, helper.depth, helper.state, helper.cognitive),
+            (
+                helper.branching,
+                helper.depth,
+                helper.state,
+                helper.cognitive
+            ),
             (3, 2, 1, 3),
             "helper carries its own structure, once"
         );

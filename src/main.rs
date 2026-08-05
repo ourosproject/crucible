@@ -12,7 +12,11 @@ fn main() {
 
     // Sort the walk: `walkdir`'s default order is the filesystem's readdir order,
     // which is not stable across machines — determinism (spec §8) must not depend on it.
-    for entry in WalkDir::new(&path).sort_by_file_name().into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(&path)
+        .sort_by_file_name()
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
         let p = entry.path();
         if p.extension().and_then(|e| e.to_str()) != Some("rs") {
             continue;
