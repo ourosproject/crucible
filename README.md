@@ -1,4 +1,4 @@
-#DISCLAIMER
+# DISCLAIMER
 
 How this was built
 I designed crucible and built it with **heavy LLM assistance**, working from the spec and plan in docs/. The design decisions are mine and argued for in those documents, particularly the refusals: no grading, no averaging, no defect prediction. The commit history is the real sequence of work rather than a squashed dump.
