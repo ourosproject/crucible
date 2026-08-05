@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["complexity", "metrics", "static-analysis", "cli", "rust"]
 categories = ["development-tools", "command-line-utilities"]
-# repository = "https://github.com/YOUR_USERNAME/crucible"   # set before publishing
+repository = "https://github.com/ourosproject/crucible"
 
 [dependencies]
 syn = { version = "2", features = ["full", "visit", "extra-traits"] }

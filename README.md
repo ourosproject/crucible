@@ -78,7 +78,7 @@ parent, so a trivial wrapper around a monster helper reads as exactly that.
 ## Install
 
 ```
-git clone https://github.com/YOUR_USERNAME/crucible
+git clone https://github.com/ourosproject/crucible
 cd crucible
 cargo build --release
 ./target/release/crucible path/to/your/rust/project
